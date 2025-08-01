@@ -7,7 +7,7 @@ local utils = require("codecompanion.utils.adapters")
 local _cached_adapter
 
 ---Get a list of available Ollama models
----@params self CodeCompanion.Adapter
+---@params self CodeCompanion.HTTPAdapter
 ---@params opts? table
 ---@return table
 local function get_models(self, opts)
@@ -92,7 +92,7 @@ local function get_models(self, opts)
   return models
 end
 
----@class Ollama.Adapter: CodeCompanion.Adapter
+---@class CodeCompanion.HTTPAdapter.Ollama: CodeCompanion.HTTPAdapter
 return {
   name = "ollama",
   formatted_name = "Ollama",
@@ -292,7 +292,7 @@ return {
     end,
 
     ---Form the reasoning output that is stored in the chat buffer
-    ---@param self CodeCompanion.Adapter
+    ---@param self CodeCompanion.HTTPAdapter
     ---@param data table The reasoning output from the LLM
     ---@return nil|{ content: string, _data: table }
     form_reasoning = function(self, data)
