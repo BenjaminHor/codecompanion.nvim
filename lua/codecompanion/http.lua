@@ -171,7 +171,7 @@ function Client:request(payload, actions, opts)
         cleanup(opts.status)
         if self.user_args.event then
           if not opts.silent then
-            util.fire("RequestFinished" .. (self.user_args.event or ""), opts)
+            util.fire(self.user_args.event, opts)
           end
         end
       end)
@@ -233,7 +233,7 @@ function Client:request(payload, actions, opts)
   end
   if self.user_args.event then
     if not opts.silent then
-      util.fire("RequestStarted" .. (self.user_args.event or ""), opts)
+      util.fire(self.user_args.event, opts)
     end
   end
 
