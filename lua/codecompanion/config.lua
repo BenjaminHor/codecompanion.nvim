@@ -506,6 +506,7 @@ local defaults = {
           modes = {
             n = "gr",
           },
+          opts = { nowait = true },
           index = 2,
           callback = "keymaps.reject_change",
           description = "Reject change",
