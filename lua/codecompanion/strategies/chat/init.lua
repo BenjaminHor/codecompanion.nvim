@@ -176,6 +176,22 @@ local function has_tag(tag, messages)
   )
 end
 
+---Are there any user messages in the chat buffer?
+---@param chat CodeCompanion.Chat
+---@return boolean
+local function has_user_messages(chat)
+  local count = vim
+    .iter(chat.messages)
+    :filter(function(msg)
+      return msg.role == config.constants.USER_ROLE
+    end)
+    :totable()
+  if #count == 0 then
+    return false
+  end
+  return true
+end
+
 ---Increment the cycle count in the chat buffer
 ---@param chat CodeCompanion.Chat
 ---@return nil
@@ -890,66 +906,6 @@ function Chat:_submit_http(payload)
   local adapter = self.adapter ---@cast adapter CodeCompanion.HTTPAdapter
 
   local settings = ts_parse_settings(self.bufnr, self.yaml_parser, adapter)
-  opts = opts or {}
-
-  if opts.callback then
-    opts.callback()
-  end
-
-  -- Refresh tools before submitting to pick up any dynamically added tools
-  self.tools:refresh()
-
-  local bufnr = self.bufnr
-
-  if opts.auto_submit then
-    self.watchers:check_for_changes(self)
-  else
-    local message = ts_parse_messages(self, self.header_line)
-
-    if not message and not helpers.has_user_messages(self) then
-      return log:warn("No messages to submit")
-    end
-
-    self.watchers:check_for_changes(self)
-
-    -- Allow users to send a blank message to the LLM
-    if not opts.regenerate then
-      local chat_opts = config.strategies.chat.opts
-      if message and message.content and chat_opts and chat_opts.prompt_decorator then
-        message.content =
-          chat_opts.prompt_decorator(message.content, adapters.make_safe(self.adapter), self.buffer_context)
-      end
-      self:add_message({
-        role = config.constants.USER_ROLE,
-        content = (message and message.content or config.strategies.chat.opts.blank_prompt),
-      })
-    end
-
-    -- NOTE: There are instances when submit is called with no user message. Such
-    -- as in the case of tools auto-submitting responses. Context should be
-    -- excluded and we can do this by checking for user messages.
-    if message then
-      message = self.context:clear(self.messages[#self.messages])
-      self:replace_vars_and_tools(message)
-      self:check_images(message)
-      self:check_context()
-      add_pins(self)
-    end
-
-    -- Check if the user has manually overridden the adapter
-    if vim.g.codecompanion_adapter and self.adapter.name ~= vim.g.codecompanion_adapter then
-      self.adapter = adapters.resolve(config.adapters[vim.g.codecompanion_adapter])
-    end
-
-    if not config.display.chat.auto_scroll then
-      vim.cmd("stopinsert")
-    end
-    self.ui:lock_buf()
-
-    set_text_editing_area(self, 2) -- this accounts for the LLM header
-  end
-
-  local settings = ts_parse_settings(bufnr, self.yaml_parser, self.adapter)
   self:apply_settings(settings)
   local mapped_settings = adapter:map_schema_to_params(settings)
 
@@ -1333,9 +1289,6 @@ function Chat:check_context()
   for id, tool_schema in pairs(self.tool_registry.schemas) do
     if not vim.tbl_contains(to_remove, id) then
       schemas_to_keep[id] = tool_schema
-  for id, tool_schemas in pairs(self.tool_registry.schemas) do
-    if not vim.tbl_contains(to_remove, id) then
-      schemas_to_keep[id] = tool_schemas
       local tool_name = id:match("<tool>(.*)</tool>")
       if tool_name and self.tool_registry.in_use[tool_name] then
         tools_in_use_to_keep[tool_name] = true
