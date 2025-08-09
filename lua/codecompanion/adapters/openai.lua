@@ -338,9 +338,9 @@ return {
         ["gpt-4-turbo-preview"] = { opts = { has_vision = true } },
         "gpt-4",
         "gpt-3.5-turbo",
-        "gpt-5-chat-latest",
-        "gpt-5-mini",
-        "gpt-5",
+        ["gpt-5-chat-latest"] = { opts = { can_reason = true } },
+        ["gpt-5-mini"] = { opts = { can_reason = true } },
+        ["gpt-5"] = { opts = { can_reason = true } },
       },
     },
     reasoning_effort = {
